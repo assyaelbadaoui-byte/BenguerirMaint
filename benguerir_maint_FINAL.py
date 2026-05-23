@@ -2046,7 +2046,7 @@ with t1:
     <div style="text-align:center;padding:1rem;background:white;
                 border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
       <div style="font-size:2rem;">👨‍🎓</div>
-      <div style="font-weight:600;color:{BLEU if False else VERT};">[Votre Nom]</div>
+      <div style="font-weight:600;color:{BLEU if False else VERT};">[ASSYA EL BADAOUI]</div>
       <div style="font-size:12px;color:#6b7280;">Étudiant PFE</div>
     </div>
     """, unsafe_allow_html=True)
@@ -2054,7 +2054,7 @@ with t1:
     <div style="text-align:center;padding:1rem;background:white;
                 border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
       <div style="font-size:2rem;">👨‍💼</div>
-      <div style="font-weight:600;color:{VERT};">[Encadrant École]</div>
+      <div style="font-weight:600;color:{VERT};">[IMAD EL HARRAKI]</div>
       <div style="font-size:12px;color:#6b7280;">Encadrant académique</div>
     </div>
     """, unsafe_allow_html=True)
@@ -2062,7 +2062,7 @@ with t1:
     <div style="text-align:center;padding:1rem;background:white;
                 border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
       <div style="font-size:2rem;">🏭</div>
-      <div style="font-weight:600;color:{VERT};">[Encadrant OCP]</div>
+      <div style="font-weight:600;color:{VERT};">[JAWAD FATIH]</div>
       <div style="font-size:12px;color:#6b7280;">Encadrant industriel</div>
     </div>
     """, unsafe_allow_html=True)
