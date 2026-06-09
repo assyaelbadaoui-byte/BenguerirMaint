@@ -463,21 +463,46 @@ feats["Niveau"] = feats["Health_Score"].apply(
     lambda s: "CRITIQUE" if s<40 else "DÉGRADÉ" if s<65 else "BON"
 )
 
+
 # Modèle Random Forest
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
 cols_rf = ["Nga_max","Nga_mean","Ngv_max","Ngv_mean","Temp_max","Nb_Pannes"]
-feats["Panne_Risk"] = (
-    (feats["Ngv_max"]>0.15)|(feats["Nga_max"]>0.05)|
-    (feats["Temp_max"]>60) |(feats["Nb_Pannes"]>=5)
-).astype(int)
 
 X = feats[cols_rf]
-y = feats["Panne_Risk"]
-if len(y.unique()) > 1:
+y = feats["Niveau"]
+
+validation_ok = False
+
+if len(y.unique()) > 1 and len(feats) >= 10:
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.30,
+        random_state=42,
+        stratify=y if y.value_counts().min() >= 2 else None
+    )
+
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf.fit(X, y)
-    feats["Proba_Panne_%"] = (rf.predict_proba(X)[:,1]*100).round(1)
+    rf.fit(X_train, y_train)
+
+    y_pred = rf.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average="weighted", zero_division=0)
+    recall = recall_score(y_test, y_pred, average="weighted", zero_division=0)
+    f1 = f1_score(y_test, y_pred, average="weighted", zero_division=0)
+    cm = confusion_matrix(y_test, y_pred, labels=["BON", "DÉGRADÉ", "CRITIQUE"])
+
+    feats["Niveau_RF"] = rf.predict(X)
+    validation_ok = True
+
 else:
-    feats["Proba_Panne_%"] = (100 - feats["Health_Score"])
+    feats["Niveau_RF"] = feats["Niveau"]
+
+# Probabilité de panne basée sur le Health Score
+feats["Proba_Panne_%"] = (100 - feats["Health_Score"]).round(1)
 
 # ════════════════════════════════════════════════════════════
 #  SIDEBAR — FILTRES
@@ -1137,6 +1162,28 @@ with t6:
         fig12.update_layout(height=280,
                             coloraxis_showscale=False)
         st.plotly_chart(fig12, use_container_width=True, key='chart_12')
+
+    st.markdown("---")
+    st.subheader("Validation du modèle Random Forest")
+
+    if validation_ok:
+        c1, c2, c3, c4 = st.columns(4)
+
+        c1.metric("Accuracy", f"{accuracy*100:.1f}%")
+        c2.metric("Précision", f"{precision*100:.1f}%")
+        c3.metric("Rappel", f"{recall*100:.1f}%")
+        c4.metric("F1-score", f"{f1*100:.1f}%")
+
+        st.write("Matrice de confusion")
+        st.dataframe(
+            pd.DataFrame(
+                cm,
+                index=["Réel BON", "Réel DÉGRADÉ", "Réel CRITIQUE"],
+                columns=["Prédit BON", "Prédit DÉGRADÉ", "Prédit CRITIQUE"]
+            )
+        )
+    else:
+        st.warning("Validation non disponible : données insuffisantes.")
 
 # ────────────────────────────────────────────────────────────
 # ONGLET 6 — Alertes
@@ -1883,8 +1930,52 @@ with t6:
                        title="Quels capteurs influencent le plus la prédiction ?")
         fig12.update_layout(height=280,
                             coloraxis_showscale=False)
-        st.plotly_chart(fig12, use_container_width=True, key='chart_24')
+        st.plotly_chart(fig12, use_container_width=True, key='chart_rf_old')
+        st.markdown("---")
+        st.subheader("Validation du modèle Random Forest")
 
+    if validation_ok:
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        c1.metric("Accuracy", f"{accuracy*100:.1f}%")
+        c2.metric("Précision", f"{precision*100:.1f}%")
+        c3.metric("Rappel", f"{recall*100:.1f}%")
+        c4.metric("F1-score", f"{f1*100:.1f}%")
+
+        st.write("Matrice de confusion")
+
+        st.dataframe(
+            pd.DataFrame(
+                cm,
+                index=["Réel BON", "Réel DÉGRADÉ", "Réel CRITIQUE"],
+                columns=["Prédit BON", "Prédit DÉGRADÉ", "Prédit CRITIQUE"]
+            )
+        )
+
+    else:
+        st.warning("Validation non disponible")
+
+st.subheader("Validation du modèle Random Forest")
+
+if validation_ok:
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric("Accuracy", f"{accuracy*100:.1f}%")
+    c2.metric("Précision", f"{precision*100:.1f}%")
+    c3.metric("Rappel", f"{recall*100:.1f}%")
+    c4.metric("F1-score", f"{f1*100:.1f}%")
+
+    st.write("Matrice de confusion")
+    st.dataframe(
+        pd.DataFrame(
+            cm,
+            index=["Réel BON", "Réel DÉGRADÉ", "Réel CRITIQUE"],
+            columns=["Prédit BON", "Prédit DÉGRADÉ", "Prédit CRITIQUE"]
+        )
+    )
+else:
+    st.warning("Validation non disponible : données insuffisantes.")
 # ────────────────────────────────────────────────────────────
 # ONGLET 6 — Alertes
 # ────────────────────────────────────────────────────────────
