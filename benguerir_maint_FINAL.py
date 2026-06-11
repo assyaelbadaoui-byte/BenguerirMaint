@@ -2311,6 +2311,139 @@ with t8:
                                       coloraxis_showscale=False)
                 st.plotly_chart(fig_int, use_container_width=True, key='chart_25')
 
+
+# ════════════════════════════════════════════════════════════
+# ONGLET 9 — HISTORIQUE DES ARRÊTS
+# ════════════════════════════════════════════════════════════
+with t9:
+    st.subheader("📋 Historique des arrêts")
+
+    st.write("Cette page permet de consulter les arrêts enregistrés par convoyeur.")
+
+    colonnes = ["Date", "Sous_Unite", "Equipement", "Description", "Nature", "Duree_h"]
+    colonnes_existantes = [c for c in colonnes if c in df_pf.columns]
+
+    st.dataframe(
+        df_pf[colonnes_existantes].sort_values("Date", ascending=False),
+        use_container_width=True,
+        height=450
+    )
+
+
+# ════════════════════════════════════════════════════════════
+# ONGLET 10 — AMDEC ET CRITICITÉ
+# ════════════════════════════════════════════════════════════
+with t10:
+    st.subheader("🧩 AMDEC et criticité")
+
+    st.write("Cette page présente une première synthèse des modes de défaillance critiques.")
+
+    data_amdec = pd.DataFrame({
+        "Convoyeur": ["T17", "B9", "B10"],
+        "Organe": ["Tambour", "Bande", "Rouleaux"],
+        "Mode de défaillance": [
+            "Rupture de l’arbre du tambour",
+            "Déport de bande",
+            "Blocage ou usure des rouleaux"
+        ],
+        "Cause probable": [
+            "Fatigue mécanique / surcharge",
+            "Mauvais alignement",
+            "Usure des roulements"
+        ],
+        "Effet": [
+            "Arrêt du convoyeur",
+            "Usure prématurée de la bande",
+            "Échauffement et arrêt possible"
+        ],
+        "Criticité": [48, 36, 30],
+        "Action recommandée": [
+            "Redimensionnement ou choix d’un matériau plus résistant",
+            "Contrôle de l’alignement et réglage des stations",
+            "Graissage et remplacement préventif"
+        ]
+    })
+
+    st.dataframe(data_amdec, use_container_width=True, height=350)
+
+    fig_amdec = px.bar(
+        data_amdec,
+        x="Convoyeur",
+        y="Criticité",
+        color="Criticité",
+        color_continuous_scale=[VERT, ORANGE, ROUGE],
+        text="Criticité",
+        title="Criticité AMDEC par convoyeur"
+    )
+    fig_amdec.update_traces(textposition="outside")
+    fig_amdec.update_layout(height=320, coloraxis_showscale=False)
+    st.plotly_chart(fig_amdec, use_container_width=True)
+
+
+# ════════════════════════════════════════════════════════════
+# ONGLET 11 — PLAN D’ACTION
+# ════════════════════════════════════════════════════════════
+with t11:
+    st.subheader("✅ Plan d’action maintenance")
+
+    st.write("Cette page permet de suivre les actions correctives et préventives proposées.")
+
+    data_actions = pd.DataFrame({
+        "Convoyeur": ["T17", "B9", "B10"],
+        "Action": [
+            "Contrôle périodique de l’arbre du tambour",
+            "Réglage de l’alignement de la bande",
+            "Remplacement des rouleaux usés"
+        ],
+        "Responsable": ["Chef d’atelier", "Technicien maintenance", "Technicien maintenance"],
+        "Délai": ["2025-06-30", "2025-06-20", "2025-06-25"],
+        "Statut": ["En cours", "Planifiée", "Clôturée"],
+        "Date de clôture": ["", "", "2025-06-10"]
+    })
+
+    st.dataframe(data_actions, use_container_width=True, height=300)
+
+    csv_actions = data_actions.to_csv(index=False, encoding="utf-8-sig")
+    st.download_button(
+        "📥 Télécharger le plan d’action CSV",
+        data=csv_actions,
+        file_name="plan_action_benguerirmaint.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+
+# ════════════════════════════════════════════════════════════
+# ONGLET 12 — EXPORT RAPPORT
+# ════════════════════════════════════════════════════════════
+with t12:
+    st.subheader("📤 Export rapport")
+
+    st.write("Cette page permet de générer un rapport synthétique des indicateurs, alertes et actions de maintenance.")
+
+    rapport = f"""
+Rapport synthétique BenguerirMaint
+
+MTBF moyen : {round(sf["MTBF"].mean())} h
+MTTR moyen : {round(sf["MTTR"].mean(), 2)} h
+Disponibilité moyenne : {round(sf["Dispo_%"].mean(), 1)} %
+Nombre total d'arrêts : {len(df_pf)}
+Durée totale des arrêts : {round(df_pf["Duree_h"].sum(), 2)} h
+Convoyeurs critiques IA : {(feats["Niveau"]=="CRITIQUE").sum()}
+
+Conclusion :
+La plateforme BenguerirMaint permet de centraliser les données de maintenance,
+de suivre les KPI de fiabilité, de détecter les alertes et de prioriser les interventions.
+"""
+
+    st.download_button(
+        "📄 Télécharger le rapport TXT",
+        data=rapport,
+        file_name="rapport_benguerirmaint.txt",
+        mime="text/plain",
+        use_container_width=True
+    )
+
 # ─── Pied de page ────────────────────────────────────────────
 st.markdown(f"""
 <footer>
